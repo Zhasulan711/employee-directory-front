@@ -28,12 +28,32 @@ import { FiltersModal } from "./FiltersModal";
 
 const PAGE_SIZE_VALUES: readonly number[] = PAGE_SIZE_OPTIONS;
 
+const ROWS_PER_PAGE_OPTIONS = [...PAGE_SIZE_VALUES];
+
+const PAGE_WRAPPER_SX = {
+  minHeight: "100%",
+  backgroundColor: "background.default",
+  py: 4,
+} as const;
+
 function countActiveFilters(filters: EmployeeFilters): number {
   let count = 0;
   if (filters.search.trim().length > 0) count += 1;
   if (filters.role !== null) count += 1;
   count += filters.departments.length;
   return count;
+}
+
+function renderDisplayedRows({
+  from,
+  to,
+  count,
+}: {
+  from: number;
+  to: number;
+  count: number;
+}): string {
+  return `${from}–${to} of ${count !== -1 ? count : `more than ${to}`}`;
 }
 
 export function EmployeesPage() {
@@ -105,12 +125,21 @@ export function EmployeesPage() {
     setPage(0);
   }, []);
 
-  const activeFiltersCount = countActiveFilters(filters);
+  const handleOpenFilters = useCallback(() => {
+    setFiltersOpen(true);
+  }, []);
+
+  const handleCloseFilters = useCallback(() => {
+    setFiltersOpen(false);
+  }, []);
+
+  const activeFiltersCount = useMemo(
+    () => countActiveFilters(filters),
+    [filters],
+  );
 
   return (
-    <Box
-      sx={{ minHeight: "100%", backgroundColor: "background.default", py: 4 }}
-    >
+    <Box sx={PAGE_WRAPPER_SX}>
       <Container maxWidth="lg">
         <Box sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" fontWeight={600}>
@@ -131,7 +160,7 @@ export function EmployeesPage() {
           <EmployeesToolbar
             total={data.total}
             activeFiltersCount={activeFiltersCount}
-            onOpenFilters={() => setFiltersOpen(true)}
+            onOpenFilters={handleOpenFilters}
           />
           <ActiveFilters
             filters={filters}
@@ -155,18 +184,16 @@ export function EmployeesPage() {
             onPageChange={handlePageChange}
             rowsPerPage={pageSize}
             onRowsPerPageChange={handleRowsPerPageChange}
-            rowsPerPageOptions={[...PAGE_SIZE_VALUES]}
+            rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
             labelRowsPerPage="Rows per page:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}–${to} of ${count !== -1 ? count : `more than ${to}`}`
-            }
+            labelDisplayedRows={renderDisplayedRows}
           />
         </Paper>
 
         <FiltersModal
           open={filtersOpen}
           initialFilters={filters}
-          onClose={() => setFiltersOpen(false)}
+          onClose={handleCloseFilters}
           onApply={handleApplyFilters}
           onReset={handleResetFilters}
         />

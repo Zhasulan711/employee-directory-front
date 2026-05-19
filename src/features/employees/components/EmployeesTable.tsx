@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   Box,
   Chip,
@@ -41,7 +42,18 @@ const COLUMNS: readonly ColumnDef[] = [
   },
 ];
 
-export function EmployeesTable({
+const LOADING_OVERLAY_SX = {
+  position: "absolute",
+  inset: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "rgba(255, 255, 255, 0.6)",
+  backdropFilter: "blur(1px)",
+  pointerEvents: "none",
+} as const;
+
+function EmployeesTableComponent({
   rows,
   loading,
   sort,
@@ -127,21 +139,12 @@ export function EmployeesTable({
         </Table>
       </TableContainer>
       {loading ? (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "rgba(255, 255, 255, 0.6)",
-            backdropFilter: "blur(1px)",
-            pointerEvents: "none",
-          }}
-        >
+        <Box sx={LOADING_OVERLAY_SX}>
           <CircularProgress size={32} />
         </Box>
       ) : null}
     </Box>
   );
 }
+
+export const EmployeesTable = memo(EmployeesTableComponent);

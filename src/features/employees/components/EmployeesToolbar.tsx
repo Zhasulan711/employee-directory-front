@@ -1,3 +1,4 @@
+import { memo } from "react";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { Box, Button, Stack, Typography } from "@mui/material";
 
@@ -7,7 +8,7 @@ interface EmployeesToolbarProps {
   onOpenFilters: () => void;
 }
 
-export function EmployeesToolbar({
+function EmployeesToolbarComponent({
   total,
   activeFiltersCount,
   onOpenFilters,
@@ -39,3 +40,5 @@ export function EmployeesToolbar({
     </Stack>
   );
 }
+
+export const EmployeesToolbar = memo(EmployeesToolbarComponent);
