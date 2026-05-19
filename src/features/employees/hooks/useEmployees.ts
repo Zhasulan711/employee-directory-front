@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchEmployees } from "../api/employeesApi";
 import type { EmployeesQuery, EmployeesResponse } from "../types/employee";
 
@@ -26,7 +26,9 @@ export function useEmployees(query: EmployeesQuery): UseEmployeesResult {
       .catch((err: unknown) => {
         if (!cancelled) {
           setError(
-            err instanceof Error ? err : new Error("Failed to load employees"),
+            err instanceof Error
+              ? err
+              : new Error("Failed to load employees"),
           );
         }
       })
@@ -38,5 +40,5 @@ export function useEmployees(query: EmployeesQuery): UseEmployeesResult {
     };
   }, [query]);
 
-  return { data, loading, error };
+  return useMemo(() => ({ data, loading, error }), [data, loading, error]);
 }

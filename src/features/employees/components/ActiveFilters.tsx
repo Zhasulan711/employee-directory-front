@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Button, Chip, Divider, Stack, Typography } from "@mui/material";
 import type { Department, EmployeeFilters } from "../types/employee";
 
@@ -9,14 +10,15 @@ interface ActiveFiltersProps {
   onResetAll: () => void;
 }
 
-export function ActiveFilters({
+function ActiveFiltersComponent({
   filters,
   onClearSearch,
   onClearRole,
   onRemoveDepartment,
   onResetAll,
 }: ActiveFiltersProps) {
-  const hasSearch = filters.search.trim().length > 0;
+  const trimmedSearch = useMemo(() => filters.search.trim(), [filters.search]);
+  const hasSearch = trimmedSearch.length > 0;
   const hasRole = filters.role !== null;
   const hasDepartments = filters.departments.length > 0;
   const hasAny = hasSearch || hasRole || hasDepartments;
@@ -40,7 +42,7 @@ export function ActiveFilters({
         {hasSearch ? (
           <Chip
             size="small"
-            label={`Search: ${filters.search.trim()}`}
+            label={`Search: ${trimmedSearch}`}
             onDelete={onClearSearch}
             color="primary"
             variant="outlined"
@@ -77,3 +79,5 @@ export function ActiveFilters({
     </>
   );
 }
+
+export const ActiveFilters = memo(ActiveFiltersComponent);

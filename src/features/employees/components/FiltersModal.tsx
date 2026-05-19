@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
   Box,
@@ -29,7 +29,14 @@ interface FiltersModalProps {
 
 const ROLE_NONE_VALUE = "";
 
-export function FiltersModal({
+const SHRINK_LABEL_PROPS = { shrink: true } as const;
+
+function renderDepartmentsValue(selected: unknown): string {
+  const list = selected as Department[];
+  return list.length === 0 ? "All departments" : list.join(", ");
+}
+
+function FiltersModalComponent({
   open,
   initialFilters,
   onClose,
@@ -50,32 +57,55 @@ export function FiltersModal({
     }
   }, [open, initialFilters]);
 
-  const handleRoleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const value = event.target.value;
-    setRole(value === ROLE_NONE_VALUE ? null : (value as Role));
-  };
+  const handleSearchChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setSearch(event.target.value);
+    },
+    [],
+  );
 
-  const handleDepartmentsChange = (event: SelectChangeEvent<unknown>) => {
-    const value = event.target.value;
-    if (Array.isArray(value)) {
-      setDepartments(value as Department[]);
-    } else if (typeof value === "string") {
-      setDepartments(value === "" ? [] : (value.split(",") as Department[]));
-    }
-  };
+  const handleRoleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value = event.target.value;
+      setRole(value === ROLE_NONE_VALUE ? null : (value as Role));
+    },
+    [],
+  );
 
-  const handleApply = () => {
+  const handleDepartmentsChange = useCallback(
+    (event: SelectChangeEvent<unknown>) => {
+      const value = event.target.value;
+      if (Array.isArray(value)) {
+        setDepartments(value as Department[]);
+      } else if (typeof value === "string") {
+        setDepartments(value === "" ? [] : (value.split(",") as Department[]));
+      }
+    },
+    [],
+  );
+
+  const handleApply = useCallback(() => {
     onApply({ search: search.trim(), role, departments });
-  };
+  }, [onApply, search, role, departments]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setSearch("");
     setRole(null);
     setDepartments([]);
     onReset();
-  };
+  }, [onReset]);
+
+  const departmentsSelectProps = useMemo(
+    () => ({
+      multiple: true as const,
+      onChange: handleDepartmentsChange,
+      renderValue: renderDepartmentsValue,
+      displayEmpty: true,
+    }),
+    [handleDepartmentsChange],
+  );
+
+  const roleSelectProps = useMemo(() => ({ displayEmpty: true }), []);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -95,9 +125,9 @@ export function FiltersModal({
             label="Search across all columns"
             placeholder="ID, name, email, role, department"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={handleSearchChange}
             fullWidth
-            InputLabelProps={{ shrink: true }}
+            InputLabelProps={SHRINK_LABEL_PROPS}
           />
           <TextField
             select
@@ -105,8 +135,8 @@ export function FiltersModal({
             value={role ?? ROLE_NONE_VALUE}
             onChange={handleRoleChange}
             fullWidth
-            InputLabelProps={{ shrink: true }}
-            SelectProps={{ displayEmpty: true }}
+            InputLabelProps={SHRINK_LABEL_PROPS}
+            SelectProps={roleSelectProps}
           >
             <MenuItem value={ROLE_NONE_VALUE}>
               <em>Any role</em>
@@ -122,16 +152,8 @@ export function FiltersModal({
             label="Department"
             value={departments}
             fullWidth
-            InputLabelProps={{ shrink: true }}
-            SelectProps={{
-              multiple: true,
-              onChange: handleDepartmentsChange,
-              renderValue: (selected) => {
-                const list = selected as Department[];
-                return list.length === 0 ? "All departments" : list.join(", ");
-              },
-              displayEmpty: true,
-            }}
+            InputLabelProps={SHRINK_LABEL_PROPS}
+            SelectProps={departmentsSelectProps}
           >
             {DEPARTMENTS.map((option) => (
               <MenuItem key={option} value={option}>
@@ -155,3 +177,5 @@ export function FiltersModal({
     </Dialog>
   );
 }
+
+export const FiltersModal = memo(FiltersModalComponent);
